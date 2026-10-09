@@ -3,127 +3,101 @@ package cui;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 import domein.DomeinController;
 
 public class LottoApplicatie {
-	
-	private Scanner invoer = new Scanner(System.in);
-	private DomeinController dc; 
-	
-	private static final int REGISTREER = 1;
-	private static final int CONTROLE_NUMMERS = 2;
-	private static final int STOP = 3;
-	
-	public LottoApplicatie(DomeinController dc) {
-		this.dc = dc;
-	}	
-	
-	public void startLotto()
-	{
-		int keuze = invoerKeuze();
-		while (keuze != STOP)
-		{
-			switch (keuze) {
-				case REGISTREER -> doeRegistreerTrekking();
-				case CONTROLE_NUMMERS -> doeControleerNummers();
-			}
-			keuze = invoerKeuze();
-		}
-		System.out.println("Tot volgende keer!");		
-	}
 
-    private int invoerKeuze()
-    {
-		int keuze;
-		do {
-			System.out.println("MENU");
-			System.out.println("1. Registreer een trekking");
-			System.out.println("2. Controleer je nummers");
-			System.out.println("3. Stoppen");
-			System.out.println("Maak je keuze > ");
-			keuze = invoer.nextInt();
-		} while (keuze < 1 || keuze > STOP);
-	    return keuze;
+    private DomeinController dc;
+
+    public LottoApplicatie(DomeinController dc) {
+        this.dc = dc;
     }
-    
+
+    public void startLotto() {
+        String[] menuOpties = {"Stoppen", "Registreer een trekking", "Controleer je nummers"};
+
+        int keuze = invoerKeuzeUitOpties("MENU", menuOpties);
+        while (keuze != 0) {
+            switch (keuze) {
+                case 1 -> doeRegistreerTrekking();
+                case 2 -> doeControleerNummers();
+            }
+
+            keuze = invoerKeuzeUitOpties("MENU",menuOpties);
+        }
+        IO.println("Tot volgende keer!");
+    }
+
+    private int invoerKeuzeUitOpties(String hoofding, String[] opties) {
+        int keuze;
+        do {
+            IO.println(hoofding);
+            for(int i = 0; i<opties.length; i++){
+                IO.println(String.format("%d: %s", i, opties[i]));
+            }
+
+            keuze = invoerGetal("Maak je keuze > ");
+        } while (keuze < 0 || keuze > opties.length);
+        return keuze;
+    }
+
     private String invoerTekst(String instructie) {
-		String naam;
+        return IO.readln(instructie);
+    }
 
-		System.out.print(instructie);
-		naam = invoer.nextLine();
-		return naam;
-	}
-	
-	private LocalDate invoerDatum() {
-		System.out.print("Geef de dag van de trekking in (1-31): ");
-		int dag = invoer.nextInt(); 
-		System.out.print("Geef de maand van de trekking in (1-12): ");
-		int maand = invoer.nextInt(); 
-		System.out.print("Geef het jaar van de trekking in: ");
-		int jaar = invoer.nextInt(); 
-		return LocalDate.of(jaar, maand, dag); 
-	}
-    
-	private List<Integer> invoerNummers()
-	{
-		List<Integer> nummers = new ArrayList<>();
-		for (int teller = 1; teller <= dc.aantalNummers(); teller++) {      // Best om het aantal nummers in een trekking in het domein bij te houden en hier op te vragen. (TODO: voorzie de nodige methode(s)/constante(n) in het domein die hiervoor nodig zijn)
-			System.out.printf("Geef %d%s nummer in > ", teller, teller == 1 ? "ste" : "de");
-			nummers.add(invoer.nextInt());
-		}
-		return nummers;		
-	}
+    private int invoerGetal(String instructie) {
+        return Integer.parseInt(IO.readln(instructie));
+    }
 
-	private int invoerNogControleren()
-	{
-		int keuze;
-		do
-		{
-			System.out.print("Wil je nog nummers controleren voor deze trekking? (1=ja, 2=nee) :");
-            keuze = invoer.nextInt();
-		}
-		while(keuze < 1 || keuze > 2);
-		return keuze;
-	}
-	
-	private void doeRegistreerTrekking() {	// UC1
-		invoer.nextLine(); 	// buffer voor tekst inlezen NA getal
-		
-		String naam = invoerTekst("Registreer een nieuwe trekking.\nGeef de naam van de trekking > ");
-		LocalDate datum = invoerDatum();
-		List<Integer> nummers = invoerNummers();		
+    private LocalDate invoerDatum() {
+        int dag = invoerGetal("Geef de dag van de trekking in (1-31): ");
+        int maand = invoerGetal("Geef de maand van de trekking in (1-12): ");
+        int jaar = invoerGetal("Geef het jaar van de trekking in: ");
+        return LocalDate.of(jaar, maand, dag);
+    }
 
-		// TODO: registreer de trekking in het domein
+    private List<Integer> invoerNummers() {
+        List<Integer> nummers = new ArrayList<>();
+        for (int teller = 1; teller <= dc.geefAantalNummers(); teller++) {      // Best om het aantal nummers in een trekking in het domein bij te houden en hier op te vragen. (TODO: voorzie de nodige methode(s)/constante(n) in het domein die hiervoor nodig zijn)
+            int nieuwNummer = invoerGetal(String.format("Geef %d%s nummer in > ", teller, teller == 1 ? "ste" : "de"));
+            nummers.add(nieuwNummer);
+        }
+        return nummers;
+    }
 
-		System.out.println("De trekking werd geregistreerd!");
-	}
+    private void doeRegistreerTrekking() {  // UC1
+        String naam = invoerTekst("Registreer een nieuwe trekking.\nGeef de naam van de trekking > ");
+        LocalDate datum = invoerDatum();
+        List<Integer> nummers = invoerNummers();
 
-	private void doeControleerNummers() { // UC2
-        invoer.nextLine(); 	// buffer voor tekst inlezen NA getal
+        // TODO: registreer de trekking in het domein
 
+        IO.println("De trekking werd geregistreerd!");
+    }
+
+    private void doeControleerNummers() {   // UC2
         String naam;
-		List<Integer> nummers;
+        List<Integer> nummers;
         int keuze;
 
         // TODO: toon de trekkingen uit het domein
 
         naam = invoerTekst("Geef de naam van de trekking waarvoor je je nummers wil controleren > ");
-	    // TODO: selecteer de trekking met deze naam in het domein
+        // TODO: selecteer de trekking met deze naam in het domein
 
-        // TODO: Toon naam en datum van de geselecteerde trekking of een gepaste melding als er geen trekking was met deze naam.
+        // TODO: Toon naam en datum van de geselecteerde trekking
 
         do {
-            System.out.printf("Geef jouw nummers in.%n");
+            IO.println(String.format("Geef jouw nummers in."));
 
             nummers = invoerNummers();
             // TODO: bereken de winst voor deze nummers
             int winst = 0;
-            System.out.printf("Met deze nummers win je %d Euro.%n", winst);
-            keuze = invoerNogControleren();
+            IO.println(String.format("Met deze nummers win je %d Euro.", winst));
+
+            keuze = invoerKeuzeUitOpties("Wil je nog nummers invoeren?", new String[]{"neen", "ja"});
         } while (keuze == 1);
 
-		
-	}
+    }
 }
